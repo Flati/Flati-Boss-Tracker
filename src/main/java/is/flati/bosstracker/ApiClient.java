@@ -1,22 +1,22 @@
 package is.flati.bosstracker;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import is.flati.bosstracker.model.KcSyncPayload;
-import is.flati.bosstracker.model.KcUpdatePayload;
-import is.flati.bosstracker.model.KillPayload;
+import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.RuneLite;
 import net.runelite.client.config.ConfigManager;
+import is.flati.bosstracker.model.KcSyncPayload;
+import is.flati.bosstracker.model.KcUpdatePayload;
+import is.flati.bosstracker.model.KillPayload;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,46 +29,43 @@ public class ApiClient
 {
 	private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 	private static final String USER_AGENT = "FlatiBossTracker/1.0";
-	private static final Gson GSON = new GsonBuilder().create();
 	private static final String CONFIG_GROUP = "flatibosstracker";
 	private static final String LAST_BULK_SYNC_KEY = "lastBulkSyncAt";
+	private static final String PLUGIN_DIR = "flati-boss-tracker";
+	private static final String QUEUE_FILE = "queue.jsonl";
 
 	private final OkHttpClient httpClient;
-	private final ExecutorService executor;
+	private final Gson gson;
 	private final ConfigManager configManager;
 	private final BossTrackerConfig config;
 
 	@Inject
-	public ApiClient(ConfigManager configManager, BossTrackerConfig config)
+	public ApiClient(OkHttpClient httpClient, Gson gson, ConfigManager configManager, BossTrackerConfig config)
 	{
+		this.httpClient = httpClient;
+		this.gson = gson;
 		this.configManager = configManager;
 		this.config = config;
-		this.httpClient = new OkHttpClient();
-		this.executor = Executors.newSingleThreadExecutor(r -> {
-			Thread t = new Thread(r, "flati-boss-tracker-api");
-			t.setDaemon(true);
-			return t;
-		});
+	}
+
+	public void shutdown()
+	{
+		httpClient.dispatcher().cancelAll();
 	}
 
 	public void sendKill(KillPayload payload)
 	{
-		enqueue(config.bossKillEndpoint(), payload);
+		enqueue(config.bossKillEndpoint(), payload, null);
 	}
 
 	public void sendKcUpdate(KcUpdatePayload payload)
 	{
-		enqueue(config.kcUpdateEndpoint(), payload);
+		enqueue(config.kcUpdateEndpoint(), payload, null);
 	}
 
 	public void sendKcSync(KcSyncPayload payload, Runnable onSuccess)
 	{
-		executor.execute(() -> {
-			if (!postJson(config.kcSyncEndpoint(), payload))
-			{
-				queuePayload(config.kcSyncEndpoint(), payload);
-				return;
-			}
+		enqueue(config.kcSyncEndpoint(), payload, () -> {
 			setLastBulkSyncAt(System.currentTimeMillis());
 			if (onSuccess != null)
 			{
@@ -77,78 +74,7 @@ public class ApiClient
 		});
 	}
 
-	private void enqueue(String url, Object payload)
-	{
-		executor.execute(() -> {
-			if (!postJson(url, payload))
-			{
-				queuePayload(url, payload);
-			}
-		});
-	}
-
 	public void flushRetryQueue()
-	{
-		executor.execute(this::processRetryQueue);
-	}
-
-	private boolean postJson(String url, Object payload)
-	{
-		if (config.apiKey() == null || config.apiKey().isBlank())
-		{
-			log.warn("Flati Boss Tracker: API key not configured");
-			return false;
-		}
-
-		String body = GSON.toJson(payload);
-		Request request = new Request.Builder()
-			.url(url)
-			.header("User-Agent", USER_AGENT)
-			.header("Authorization", "Bearer " + config.apiKey())
-			.post(RequestBody.create(JSON, body))
-			.build();
-
-		try (Response response = httpClient.newCall(request).execute())
-		{
-			if (!response.isSuccessful())
-			{
-				log.warn("Flati Boss Tracker: request failed {} {}", response.code(), url);
-				return false;
-			}
-			if (config.debugLogging())
-			{
-				log.debug("Flati Boss Tracker: sent to {}", url);
-			}
-			return true;
-		}
-		catch (IOException e)
-		{
-			log.warn("Flati Boss Tracker: request error for {}", url, e);
-			return false;
-		}
-	}
-
-	private Path retryQueuePath()
-	{
-		return Path.of(System.getProperty("user.home"), ".runelite", "flati-boss-tracker-queue.jsonl");
-	}
-
-	private void queuePayload(String url, Object payload)
-	{
-		try
-		{
-			Files.createDirectories(retryQueuePath().getParent());
-			String line = GSON.toJson(new QueuedRequest(url, payload)) + System.lineSeparator();
-			Files.writeString(retryQueuePath(), line, StandardCharsets.UTF_8,
-				java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-		}
-		catch (IOException e)
-		{
-			log.warn("Flati Boss Tracker: failed to queue payload", e);
-		}
-	}
-
-	private void processRetryQueue()
 	{
 		Path path = retryQueuePath();
 		if (!Files.exists(path))
@@ -167,40 +93,126 @@ public class ApiClient
 			return;
 		}
 
-		List<String> remaining = new ArrayList<>();
 		for (String line : lines)
 		{
 			if (line.isBlank())
 			{
 				continue;
 			}
-			QueuedRequest queued = GSON.fromJson(line, QueuedRequest.class);
-			if (!postJson(queued.url, queued.payload))
+			try
 			{
-				remaining.add(line);
+				QueuedRequest queued = gson.fromJson(line, QueuedRequest.class);
+				postJsonAsync(queued.url, queued.body, null, false);
+			}
+			catch (JsonSyntaxException e)
+			{
+				log.warn("Flati Boss Tracker: skipping invalid queue entry", e);
 			}
 		}
+	}
 
+	private void enqueue(String url, Object payload, Runnable onSuccess)
+	{
+		if (!config.enableExternalSync())
+		{
+			return;
+		}
+
+		if (config.apiKey() == null || config.apiKey().isBlank())
+		{
+			log.debug("Flati Boss Tracker: API key not configured");
+			return;
+		}
+
+		String body = gson.toJson(payload);
+		postJsonAsync(url, body, onSuccess, true);
+	}
+
+	private void postJsonAsync(String url, String body, Runnable onSuccess, boolean queueOnFailure)
+	{
+		if (!config.enableExternalSync())
+		{
+			return;
+		}
+
+		if (config.apiKey() == null || config.apiKey().isBlank())
+		{
+			return;
+		}
+
+		Request request = new Request.Builder()
+			.url(url)
+			.header("User-Agent", USER_AGENT)
+			.header("Authorization", "Bearer " + config.apiKey())
+			.post(RequestBody.create(JSON, body))
+			.build();
+
+		httpClient.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+				log.warn("Flati Boss Tracker: request error for {}", url, e);
+				if (queueOnFailure)
+				{
+					queuePayload(url, body);
+				}
+			}
+
+			@Override
+			public void onResponse(Call call, Response response)
+			{
+				try (Response res = response)
+				{
+					if (!res.isSuccessful())
+					{
+						log.warn("Flati Boss Tracker: request failed {} {}", res.code(), url);
+						if (queueOnFailure)
+						{
+							queuePayload(url, body);
+						}
+						return;
+					}
+
+					if (config.debugLogging())
+					{
+						log.debug("Flati Boss Tracker: sent to {}", url);
+					}
+
+					if (onSuccess != null)
+					{
+						onSuccess.run();
+					}
+				}
+			}
+		});
+	}
+
+	private Path retryQueuePath()
+	{
+		return RuneLite.RUNELITE_DIR.toPath().resolve(PLUGIN_DIR).resolve(QUEUE_FILE);
+	}
+
+	private void queuePayload(String url, String body)
+	{
 		try
 		{
-			if (remaining.isEmpty())
-			{
-				Files.deleteIfExists(path);
-			}
-			else
-			{
-				Files.write(path, remaining, StandardCharsets.UTF_8);
-			}
+			Path path = retryQueuePath();
+			Files.createDirectories(path.getParent());
+			String line = gson.toJson(new QueuedRequest(url, body)) + System.lineSeparator();
+			Files.writeString(path, line, StandardCharsets.UTF_8,
+				java.nio.file.StandardOpenOption.CREATE,
+				java.nio.file.StandardOpenOption.APPEND);
 		}
 		catch (IOException e)
 		{
-			log.warn("Flati Boss Tracker: failed to update retry queue", e);
+			log.warn("Flati Boss Tracker: failed to queue payload", e);
 		}
 	}
 
 	public long getLastBulkSyncAt()
 	{
-		Long value = configManager.getRSProfileConfiguration(CONFIG_GROUP, LAST_BULK_SYNC_KEY, long.class);
+		Long value = configManager.getRSProfileConfiguration(CONFIG_GROUP, LAST_BULK_SYNC_KEY, Long.class);
 		return value == null ? 0L : value;
 	}
 
@@ -222,13 +234,18 @@ public class ApiClient
 
 	private static class QueuedRequest
 	{
-		private final String url;
-		private final Object payload;
+		private String url;
+		private String body;
 
-		private QueuedRequest(String url, Object payload)
+		@SuppressWarnings("unused")
+		private QueuedRequest()
+		{
+		}
+
+		private QueuedRequest(String url, String body)
 		{
 			this.url = url;
-			this.payload = payload;
+			this.body = body;
 		}
 	}
 }

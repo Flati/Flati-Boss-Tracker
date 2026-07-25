@@ -7,6 +7,20 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("flatibosstracker")
 public interface BossTrackerConfig extends Config
 {
+	String THIRD_PARTY_WARNING =
+		"This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers.";
+
+	@ConfigItem(
+		keyName = "enableExternalSync",
+		name = "Enable external sync",
+		description = "Send boss kills and KC to the configured backend",
+		warning = THIRD_PARTY_WARNING
+	)
+	default boolean enableExternalSync()
+	{
+		return false;
+	}
+
 	@ConfigItem(
 		keyName = "bossKillEndpoint",
 		name = "Boss kill endpoint",
@@ -40,7 +54,7 @@ public interface BossTrackerConfig extends Config
 	@ConfigItem(
 		keyName = "apiKey",
 		name = "API key",
-		description = "Shared GIM group API key",
+		description = "Shared group API key from your backend administrator",
 		secret = true
 	)
 	default String apiKey()
@@ -51,21 +65,23 @@ public interface BossTrackerConfig extends Config
 	@ConfigItem(
 		keyName = "syncKcFromChat",
 		name = "Sync KC from chat",
-		description = "Parse kill count chat messages"
+		description = "Parse kill count chat messages and send kill events",
+		warning = THIRD_PARTY_WARNING
 	)
 	default boolean syncKcFromChat()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
 		keyName = "syncKcFromCollectionLog",
 		name = "Sync KC from Collection Log",
-		description = "Sync KC when viewing Collection Log boss pages"
+		description = "Sync KC when viewing Collection Log boss pages",
+		warning = THIRD_PARTY_WARNING
 	)
 	default boolean syncKcFromCollectionLog()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(

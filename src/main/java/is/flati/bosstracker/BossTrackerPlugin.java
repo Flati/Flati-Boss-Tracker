@@ -47,13 +47,17 @@ public class BossTrackerPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		apiClient.flushRetryQueue();
+		if (config.enableExternalSync())
+		{
+			apiClient.flushRetryQueue();
+		}
 		log.info("Flati Boss Tracker started");
 	}
 
 	@Override
 	protected void shutDown()
 	{
+		apiClient.shutdown();
 	}
 
 	@Provides
@@ -67,9 +71,12 @@ public class BossTrackerPlugin extends Plugin
 	{
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
-			apiClient.flushRetryQueue();
+			if (config.enableExternalSync())
+			{
+				apiClient.flushRetryQueue();
+			}
 
-			if (config.remindOnLogin() && apiClient.isSyncStale())
+			if (config.enableExternalSync() && config.remindOnLogin() && apiClient.isSyncStale())
 			{
 				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "",
 					"Flati Boss Tracker: Open Boss Kill Log or browse Collection Log to sync KC to flati.is",

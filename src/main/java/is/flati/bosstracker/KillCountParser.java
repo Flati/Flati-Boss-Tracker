@@ -39,7 +39,7 @@ public class KillCountParser
 
 	public void onChatMessage(ChatMessage chatMessage)
 	{
-		if (!config.syncKcFromChat())
+		if (!config.enableExternalSync() || !config.syncKcFromChat())
 		{
 			return;
 		}

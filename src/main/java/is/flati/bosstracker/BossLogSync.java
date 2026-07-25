@@ -36,7 +36,7 @@ public class BossLogSync
 
 	public void onGameTick()
 	{
-		if (!bossLogLoaded)
+		if (!config.enableExternalSync() || !bossLogLoaded)
 		{
 			return;
 		}

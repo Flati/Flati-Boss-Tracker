@@ -25,19 +25,24 @@ Open **RuneLite → Configuration → Flati Boss Tracker**.
 
 | Setting | Description |
 |---------|-------------|
+| **Enable external sync** | Master opt-in for sending data to the backend (off by default). Shows a third-party server warning when enabled. |
 | **API key** | Shared secret for your GIM group. Your group admin provides this. |
 | **Boss kill endpoint** | `POST` URL for individual kill events (default: `https://flati.is/api/osrs/boss-kill`) |
 | **KC update endpoint** | `POST` URL for single boss KC updates (default: `https://flati.is/api/osrs/kc-update`) |
 | **KC sync endpoint** | `POST` URL for bulk Boss Kill Log sync (default: `https://flati.is/api/osrs/kc-sync`) |
+| **Sync KC from chat** | Parse kill-count chat messages and send kill events (off by default) |
+| **Sync KC from Collection Log** | Sync KC when viewing Collection Log boss pages (off by default) |
 
 Authentication uses `Authorization: Bearer <api-key>`.
 
 ### First-time KC sync
 
-1. **Fast (recommended):** open **Boss Kill Log** from your Ring of Wealth. KC for all tracked bosses is synced automatically.
-2. **Gradual:** browse boss pages in the **Collection Log** — KC is synced per page as you view it.
+1. Enable **Enable external sync** and enter your group **API key**.
+2. Enable **Sync KC from chat** and/or **Sync KC from Collection Log** as needed.
+3. **Fast (recommended):** open **Boss Kill Log** from your Ring of Wealth. KC for all tracked bosses is synced automatically.
+4. **Gradual:** browse boss pages in the **Collection Log** — KC is synced per page as you view it.
 
-After the first sync, kill events and KC updates are sent automatically while you play.
+After the first sync, kill events and KC updates are sent automatically while you play (when sync is enabled).
 
 ## Building from source
 
@@ -78,13 +83,58 @@ Do **not** place a shadow JAR in `%USERPROFILE%\.runelite\sideloaded-plugins\` w
 
 The plugin sends JSON to three endpoints. A compatible backend should accept:
 
-| Endpoint | Payload | Purpose |
-|----------|---------|---------|
-| `POST …/boss-kill` | player, boss, killCount, killedAt | Individual kill event |
-| `POST …/kc-update` | player, boss, killCount, updatedAt | Single boss KC change |
-| `POST …/kc-sync` | player, entries[], updatedAt | Bulk sync from Boss Kill Log |
+| Endpoint | Purpose |
+|----------|---------|
+| `POST …/boss-kill` | Individual kill event |
+| `POST …/kc-update` | Single boss KC change |
+| `POST …/kc-sync` | Bulk sync from Boss Kill Log |
 
-All requests require a valid group API key in the `Authorization` header.
+All requests use `Content-Type: application/json` and require a valid group API key:
+
+```http
+Authorization: Bearer <api-key>
+```
+
+### Example requests
+
+**`POST /api/osrs/boss-kill`** — sent when a kill-count chat message is parsed:
+
+```json
+{
+  "playerName": "Flatmundur",
+  "bossName": "Vorkath",
+  "killedAt": "2026-07-24T14:32:05Z",
+  "killCount": 142
+}
+```
+
+**`POST /api/osrs/kc-update`** — sent when KC changes (chat, Collection Log):
+
+```json
+{
+  "playerName": "Flatmundur",
+  "bossName": "Vorkath",
+  "killCount": 142,
+  "updatedAt": "2026-07-24T14:32:05Z"
+}
+```
+
+**`POST /api/osrs/kc-sync`** — sent when Boss Kill Log is opened:
+
+```json
+{
+  "playerName": "Flatmundur",
+  "source": "boss_log",
+  "updatedAt": "2026-07-24T14:35:00Z",
+  "entries": [
+    { "bossName": "Vorkath", "killCount": 142 },
+    { "bossName": "Zulrah", "killCount": 89 },
+    { "bossName": "Theatre of Blood", "killCount": 12 }
+  ]
+}
+```
+
+Timestamps are ISO-8601 UTC strings. `bossName` values are normalized (e.g. `"Theatre of Blood"`, not `"The Theatre of Blood"`).
 
 The reference implementation and dashboard live in the [flati.is](https://flati.is/osrs) project. Self-hosters can point the endpoint settings at their own server implementing the same contract.
 
@@ -96,8 +146,8 @@ To submit changes to the official Plugin Hub, open a pull request against [runel
 
 | Problem | Fix |
 |---------|-----|
-| Kills not appearing on the dashboard | Check API key and endpoint URLs in plugin settings; enable debug logging and check `%USERPROFILE%\.runelite\logs\` (Windows) or `~/.runelite/logs/` |
-| KC out of date | Open Boss Kill Log or browse Collection Log to trigger a sync |
+| Kills not appearing on the dashboard | Enable **Enable external sync**, check API key and endpoint URLs; enable debug logging and check `%USERPROFILE%\.runelite\logs\` (Windows) or `~/.runelite/logs/` |
+| KC out of date | Enable sync settings, then open Boss Kill Log or browse Collection Log |
 | `'gradlew' is not recognized` (Windows) | Use `.\gradlew.bat` with the `.\` prefix |
 | `JAVA_HOME is not set` | Install JDK 11+ and set `JAVA_HOME` to the JDK install path |
 | Build fails on Java 26+ | Use the included Gradle wrapper; do not use an older global Gradle install |

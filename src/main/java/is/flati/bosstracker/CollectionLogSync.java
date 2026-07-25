@@ -27,7 +27,7 @@ public class CollectionLogSync
 
 	public void syncCurrentPage()
 	{
-		if (!config.syncKcFromCollectionLog())
+		if (!config.enableExternalSync() || !config.syncKcFromCollectionLog())
 		{
 			return;
 		}
