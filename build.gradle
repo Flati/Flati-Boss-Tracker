@@ -19,16 +19,22 @@ def pluginMainClass = 'is.flati.bosstracker.BossTrackerPluginTest'
 dependencies {
     compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
-    compileOnly 'org.projectlombok:lombok:1.18.46'
-    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'junit:junit:4.12'
     testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
     testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
 }
 
 group = 'is.flati.bosstracker'
 version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

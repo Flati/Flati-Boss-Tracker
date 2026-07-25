@@ -46,7 +46,7 @@ After the first sync, kill events and KC updates are sent automatically while yo
 
 ## Building from source
 
-Requires **JDK 11 or newer** (the plugin targets Java 11 bytecode). Gradle is included via the wrapper — you do not need Gradle installed globally.
+Requires **JDK 11 or newer** to run Gradle. The build uses a **Java 11 toolchain** for compilation (matching Plugin Hub CI). If you only have a newer JDK installed (e.g. Java 26), install [Eclipse Temurin 11](https://adoptium.net/) — Gradle will auto-detect it for compilation.
 
 **Windows:**
 
@@ -150,7 +150,7 @@ To submit changes to the official Plugin Hub, open a pull request against [runel
 | KC out of date | Enable sync settings, then open Boss Kill Log or browse Collection Log |
 | `'gradlew' is not recognized` (Windows) | Use `.\gradlew.bat` with the `.\` prefix |
 | `JAVA_HOME is not set` | Install JDK 11+ and set `JAVA_HOME` to the JDK install path |
-| Build fails on Java 26+ | Use the included Gradle wrapper; do not use an older global Gradle install |
+| Build fails on Java 26+ | Install JDK 11 (Temurin) alongside your system JDK; the build toolchain targets Java 11. Plugin Hub CI uses JDK 11 regardless of your local Gradle version. |
 | Plugin missing in normal RuneLite | Install from Plugin Hub; sideloaded JARs do not work with the Jagex Launcher |
 | Dev client login issues | See [Using Jagex Accounts](https://github.com/runelite/runelite/wiki/Using-Jagex-Accounts) |
 | `NoClassDefFoundError: …FullScreenAdapter` | Remove any JAR from `sideloaded-plugins` and use `gradlew run` instead |
