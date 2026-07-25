@@ -5,8 +5,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.util.Text;
 
 @Slf4j
@@ -32,7 +32,7 @@ public class CollectionLogSync
 			return;
 		}
 
-		Widget pageHead = client.getWidget(WidgetInfo.COLLECTION_LOG_ENTRY_HEADER);
+		Widget pageHead = client.getWidget(InterfaceID.Collection.HEADER_TEXT);
 		if (pageHead == null || pageHead.getDynamicChildren() == null)
 		{
 			return;
