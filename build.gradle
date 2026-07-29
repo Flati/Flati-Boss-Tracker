@@ -44,6 +44,9 @@ tasks.withType(JavaCompile).configureEach {
 tasks.register('run', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = pluginMainClass
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
 
     jvmArgs '-ea'
     args '--developer-mode', '--debug'

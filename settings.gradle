@@ -1,1 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0' apply false
+}
+
+// Gradle 9+ on Java 17+ only: auto-download JDK 11 for the toolchain.
+// Plugin Hub uses Gradle 8.10 + JDK 11 — skip there.
+if (GradleVersion.current().baseVersion >= GradleVersion.version('9.0')) {
+    apply plugin: 'org.gradle.toolchains.foojay-resolver-convention'
+}
+
 rootProject.name = 'flati-boss-tracker'
