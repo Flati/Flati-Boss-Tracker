@@ -49,6 +49,7 @@ final class BossNameRenames
 		map.put("Rewards claimed", "Wintertodt rewards");
 		map.put("Reward permits claimed", "Tempoross rewards");
 		map.put("Rumours Completed", "Hunter rumours");
+		map.put("Deep delves completed", "Deep delves");
 		map.put("Kill count", "Kill count");
 		RENAMES = Collections.unmodifiableMap(map);
 	}

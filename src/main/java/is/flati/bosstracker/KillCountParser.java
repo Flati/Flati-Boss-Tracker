@@ -54,6 +54,13 @@ public class KillCountParser
 		}
 
 		String message = chatMessage.getMessage();
+		String killedAt = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
+
+		if (handleDelveMessage(message, killedAt))
+		{
+			return;
+		}
+
 		Matcher matcher = KILLCOUNT_PATTERN.matcher(message);
 		if (!matcher.find())
 		{
@@ -70,9 +77,42 @@ public class KillCountParser
 		String boss = BossRegistry.normalizeBossName(matcher.group("boss"));
 		int kc = Integer.parseInt(matcher.group("kc").replace(",", ""));
 
-		String killedAt = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
 		sendKcUpdate(boss, kc, killedAt);
 		killEventSender.sendKill(boss, kc, killedAt);
+	}
+
+	private boolean handleDelveMessage(String message, String killedAt)
+	{
+		java.util.OptionalInt floor = DelveChatParser.parseFloor(message);
+		if (floor.isPresent())
+		{
+			int floorNumber = floor.getAsInt();
+			if (floorNumber > 0)
+			{
+				killEventSender.sendKill(DelveChatParser.BOSS_NAME, floorNumber, killedAt);
+				sendKcUpdate(DelveChatParser.DEEPEST_DELVE, floorNumber, killedAt);
+
+				if (config.debugLogging())
+				{
+					log.debug("Delve floor cleared: {}", floorNumber);
+				}
+			}
+			return true;
+		}
+
+		java.util.OptionalInt deepDelves = DelveChatParser.parseDeepDelvesCompleted(message);
+		if (deepDelves.isPresent())
+		{
+			sendKcUpdate(DelveChatParser.DEEP_DELVES, deepDelves.getAsInt(), killedAt);
+
+			if (config.debugLogging())
+			{
+				log.debug("Deep delves completed: {}", deepDelves.getAsInt());
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 	public void sendKcUpdate(String bossName, int killCount)
