@@ -44,6 +44,9 @@ public class BossTrackerPlugin extends Plugin
 	@Inject
 	private CollectionLogSync collectionLogSync;
 
+	@Inject
+	private GraceLapSync graceLapSync;
+
 	@Override
 	protected void startUp()
 	{
@@ -79,7 +82,7 @@ public class BossTrackerPlugin extends Plugin
 			if (config.enableExternalSync() && config.remindOnLogin() && apiClient.isSyncStale())
 			{
 				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "",
-					"Flati Boss Tracker: Open Boss Kill Log or browse Collection Log to sync KC to flati.is",
+					"Flati Boss Tracker: Open Boss Kill Log, Grace View Laps, or Collection Log to sync KC to flati.is",
 					null);
 			}
 		}
@@ -89,6 +92,7 @@ public class BossTrackerPlugin extends Plugin
 	public void onGameTick(GameTick event)
 	{
 		bossLogSync.onGameTick();
+		graceLapSync.onGameTick();
 	}
 
 	@Subscribe
@@ -97,6 +101,14 @@ public class BossTrackerPlugin extends Plugin
 		if (event.getGroupId() == InterfaceID.KILL_LOG)
 		{
 			bossLogSync.markBossLogLoaded();
+		}
+		else if (event.getGroupId() == InterfaceID.LONGSCROLL)
+		{
+			if (config.debugLogging())
+			{
+				log.debug("WidgetLoaded: LONGSCROLL ({})", InterfaceID.LONGSCROLL);
+			}
+			graceLapSync.markGraceLapsLoaded();
 		}
 	}
 

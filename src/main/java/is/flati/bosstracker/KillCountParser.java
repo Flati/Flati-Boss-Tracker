@@ -75,6 +75,10 @@ public class KillCountParser
 		}
 
 		String boss = BossRegistry.normalizeBossName(matcher.group("boss"));
+		if (post != null && post.contains("lap"))
+		{
+			boss = AgilityCourses.normalizeCourseName(boss);
+		}
 		int kc = Integer.parseInt(matcher.group("kc").replace(",", ""));
 
 		sendKcUpdate(boss, kc, killedAt);

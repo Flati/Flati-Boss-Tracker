@@ -9,7 +9,9 @@ The default backend is [flati.is](https://flati.is/osrs), which provides a share
 - **Kill events** — logs boss kills from in-game chat KC messages (one event per kill)
 - **KC sync** — keeps boss kill counts up to date via:
   - **Boss Kill Log** (Ring of Wealth → Features) — bulk sync when the log is opened
+  - **Grace View Laps** (Rogue's Den) — bulk sync all agility course lap counts in one dialog
   - **Collection Log** — incremental sync while browsing boss pages
+- **Agility rooftops** — lap completions from chat are tracked on the group dashboard under **Agility** (not Bosses)
 - **Offline retry** — failed requests are queued locally and retried on next login
 - **Login reminder** — optional nudge when KC has not been synced recently
 
@@ -32,15 +34,17 @@ Open **RuneLite → Configuration → Flati Boss Tracker**.
 | **KC sync endpoint** | `POST` URL for bulk Boss Kill Log sync (default: `https://flati.is/api/osrs/kc-sync`) |
 | **Sync KC from chat** | Parse kill-count chat messages and send kill events (off by default) |
 | **Sync KC from Collection Log** | Sync KC when viewing Collection Log boss pages (off by default) |
+| **Sync KC from Grace View Laps** | Bulk sync agility lap counts when viewing laps at Grace (off by default) |
 
 Authentication uses `Authorization: Bearer <api-key>`.
 
 ### First-time KC sync
 
 1. Enable **Enable external sync** and enter your group **API key**.
-2. Enable **Sync KC from chat** and/or **Sync KC from Collection Log** as needed.
-3. **Fast (recommended):** open **Boss Kill Log** from your Ring of Wealth. KC for all tracked bosses is synced automatically.
-4. **Gradual:** browse boss pages in the **Collection Log** — KC is synced per page as you view it.
+2. Enable **Sync KC from chat** and/or **Sync KC from Collection Log** / **Sync KC from Grace View Laps** as needed.
+3. **Fast (bosses):** open **Boss Kill Log** from your Ring of Wealth. KC for all tracked bosses is synced automatically.
+4. **Fast (agility):** talk to **Grace** in the Rogue's Den (Burthorpe) → right-click → **View Laps**. All course lap counts sync in one step.
+5. **Gradual:** browse boss pages in the **Collection Log** — KC is synced per page as you view it.
 
 After the first sync, kill events and KC updates are sent automatically while you play (when sync is enabled).
 

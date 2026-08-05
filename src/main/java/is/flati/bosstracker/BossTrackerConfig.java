@@ -85,6 +85,17 @@ public interface BossTrackerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "syncKcFromGraceLaps",
+		name = "Sync KC from Grace View Laps",
+		description = "Bulk sync agility course lap counts when viewing laps at Grace (Rogue's Den)",
+		warning = THIRD_PARTY_WARNING
+	)
+	default boolean syncKcFromGraceLaps()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "remindOnLogin",
 		name = "Remind on login",
 		description = "Remind to sync KC when stale or never synced"
