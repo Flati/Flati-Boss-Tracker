@@ -66,6 +66,11 @@ public class KillCountParser
 			return;
 		}
 
+		if (handleClueMessage(message, killedAt))
+		{
+			return;
+		}
+
 		Matcher matcher = KILLCOUNT_PATTERN.matcher(message);
 		if (!matcher.find())
 		{
@@ -155,6 +160,25 @@ public class KillCountParser
 		}
 
 		return false;
+	}
+
+	private boolean handleClueMessage(String message, String killedAt)
+	{
+		java.util.Optional<ClueChatParser.ClueCompletion> completion = ClueChatParser.parse(message);
+		if (!completion.isPresent())
+		{
+			return false;
+		}
+
+		ClueChatParser.ClueCompletion clue = completion.get();
+		sendKcUpdate(clue.getBossName(), clue.getCount(), killedAt);
+
+		if (config.debugLogging())
+		{
+			log.debug("Clue completed: {} = {}", clue.getBossName(), clue.getCount());
+		}
+
+		return true;
 	}
 
 	public void sendKcUpdate(String bossName, int killCount)
