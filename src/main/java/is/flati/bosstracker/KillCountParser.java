@@ -61,6 +61,11 @@ public class KillCountParser
 			return;
 		}
 
+		if (handleSepulchreMessage(message, killedAt))
+		{
+			return;
+		}
+
 		Matcher matcher = KILLCOUNT_PATTERN.matcher(message);
 		if (!matcher.find())
 		{
@@ -112,6 +117,39 @@ public class KillCountParser
 			if (config.debugLogging())
 			{
 				log.debug("Deep delves completed: {}", deepDelves.getAsInt());
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean handleSepulchreMessage(String message, String killedAt)
+	{
+		java.util.OptionalInt coffinsOpened = SepulchreChatParser.parseCoffinsOpened(message);
+		if (coffinsOpened.isPresent())
+		{
+			int totalCoffins = coffinsOpened.getAsInt();
+			killEventSender.sendKill(
+				SepulchreChatParser.COFFIN_BOSS_NAME, totalCoffins, killedAt);
+			sendKcUpdate(SepulchreChatParser.COFFINS_OPENED, totalCoffins, killedAt);
+
+			if (config.debugLogging())
+			{
+				log.debug("Grand Hallowed Coffin opened: {}", totalCoffins);
+			}
+			return true;
+		}
+
+		java.util.OptionalInt floor = SepulchreChatParser.parseFloorCompletion(message);
+		if (floor.isPresent())
+		{
+			int floorNumber = floor.getAsInt();
+			killEventSender.sendKill(SepulchreChatParser.TIMELINE_BOSS_NAME, floorNumber, killedAt);
+
+			if (config.debugLogging())
+			{
+				log.debug("Hallowed Sepulchre floor completed: {}", floorNumber);
 			}
 			return true;
 		}
