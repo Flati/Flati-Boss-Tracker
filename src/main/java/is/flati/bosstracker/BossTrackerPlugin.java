@@ -93,6 +93,7 @@ public class BossTrackerPlugin extends Plugin
 	{
 		bossLogSync.onGameTick();
 		graceLapSync.onGameTick();
+		collectionLogSync.onGameTick();
 	}
 
 	@Subscribe
@@ -117,7 +118,7 @@ public class BossTrackerPlugin extends Plugin
 	{
 		if (event.getScriptId() == ScriptID.COLLECTION_DRAW_LIST)
 		{
-			collectionLogSync.syncCurrentPage();
+			collectionLogSync.markCollectionLogDrawn();
 		}
 	}
 

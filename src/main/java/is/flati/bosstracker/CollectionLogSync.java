@@ -17,12 +17,35 @@ public class CollectionLogSync
 	private final BossTrackerConfig config;
 	private final KillCountParser killCountParser;
 
+	private boolean collectionLogDrawn;
+
 	@Inject
 	public CollectionLogSync(Client client, BossTrackerConfig config, KillCountParser killCountParser)
 	{
 		this.client = client;
 		this.config = config;
 		this.killCountParser = killCountParser;
+	}
+
+	public void markCollectionLogDrawn()
+	{
+		collectionLogDrawn = true;
+	}
+
+	public void onGameTick()
+	{
+		if (!collectionLogDrawn)
+		{
+			return;
+		}
+		collectionLogDrawn = false;
+
+		if (config.debugLogging())
+		{
+			log.debug("Collection log page drawn, syncing KC");
+		}
+
+		syncCurrentPage();
 	}
 
 	public void syncCurrentPage()
