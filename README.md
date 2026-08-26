@@ -2,7 +2,7 @@
 
 A [RuneLite](https://runelite.net/) plugin that syncs **boss kill counts** and **kill events** from Old School RuneScape to a web backend. Built for **Group Ironman** teams, but works for any group that shares an API key.
 
-The default backend is [flati.is](https://flati.is/osrs), which provides a shared KC dashboard and kill timeline per group. All API endpoints are configurable if you run your own server.
+The default backend is [flati.is](https://flati.is/osrs), which provides a shared KC dashboard and kill timeline per group. All API endpoints are configurable if you run your own server — see the open-source reference server at [Flati-Boss-Tracker-Server](https://github.com/Flati/Flati-Boss-Tracker-Server).
 
 ## Features
 
@@ -142,7 +142,7 @@ Authorization: Bearer <api-key>
 
 Timestamps are ISO-8601 UTC strings. `bossName` values are normalized (e.g. `"Theatre of Blood"`, not `"The Theatre of Blood"`).
 
-The reference implementation and dashboard live in the [flati.is](https://flati.is/osrs) project. Self-hosters can point the endpoint settings at their own server implementing the same contract.
+The reference server and dashboard live in [Flati-Boss-Tracker-Server](https://github.com/Flati/Flati-Boss-Tracker-Server). Self-hosters can run it with Docker and point the plugin endpoint settings at their instance.
 
 ## Contributing / Plugin Hub
 

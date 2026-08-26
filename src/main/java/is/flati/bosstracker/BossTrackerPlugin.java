@@ -21,7 +21,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 @Slf4j
 @PluginDescriptor(
 	name = "Flati Boss Tracker",
-	description = "Tracks GIM boss kills and KC for flati.is",
+	description = "Tracks GIM boss kills and KC for flati.is or self-hosted backends",
 	tags = {"boss", "gim", "ironman", "tracking"}
 )
 public class BossTrackerPlugin extends Plugin
