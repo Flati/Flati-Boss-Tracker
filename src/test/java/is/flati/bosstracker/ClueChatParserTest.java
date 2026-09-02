@@ -50,6 +50,16 @@ public class ClueChatParserTest
 	}
 
 	@Test
+	public void parse_withColorMacro()
+	{
+		Optional<ClueChatParser.ClueCompletion> completion = ClueChatParser.parse(
+			"You have completed @mes_hl_red@255</col> beginner Treasure Trails.");
+		assertTrue(completion.isPresent());
+		assertEquals("Beginner clues completed", completion.get().getBossName());
+		assertEquals(255, completion.get().getCount());
+	}
+
+	@Test
 	public void parse_doesNotMatchGenericCompletionMessage()
 	{
 		assertFalse(ClueChatParser.parse(

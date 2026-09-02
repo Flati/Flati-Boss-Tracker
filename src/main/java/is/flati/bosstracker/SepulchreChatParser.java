@@ -10,14 +10,12 @@ final class SepulchreChatParser
 	static final String COFFIN_BOSS_NAME = "Grand Hallowed Coffin";
 	static final String COFFINS_OPENED = "Grand Hallowed Coffins opened";
 
-	private static final String COLORED_NUMBER = "(?:<col=[0-9a-f]{6}>)?(?<value>[0-9,]+)(?:</col>)?";
-
 	static final Pattern FLOOR_COMPLETION_PATTERN = Pattern.compile(
 		"You have completed Floor (?<floor>[1-5]) of the Hallowed Sepulchre! Total completions: "
-			+ COLORED_NUMBER.replace("value", "completions") + "\\.");
+			+ ChatMarkup.coloredCount("completions") + "\\.");
 
 	static final Pattern COFFIN_PATTERN = Pattern.compile(
-		"You have opened the Grand Hallowed Coffin " + COLORED_NUMBER.replace("value", "kc") + " times?!");
+		"You have opened the Grand Hallowed Coffin " + ChatMarkup.coloredCount("kc") + " times?!");
 
 	private SepulchreChatParser()
 	{

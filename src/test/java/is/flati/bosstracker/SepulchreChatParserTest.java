@@ -55,6 +55,15 @@ public class SepulchreChatParserTest
 	}
 
 	@Test
+	public void parseCoffinsOpened_withColorMacro()
+	{
+		OptionalInt kc = SepulchreChatParser.parseCoffinsOpened(
+			"You have opened the Grand Hallowed Coffin @mes_hl_red@36</col> times!");
+		assertTrue(kc.isPresent());
+		assertEquals(36, kc.getAsInt());
+	}
+
+	@Test
 	public void parseCoffinsOpened_doesNotMatchFloorCompletion()
 	{
 		assertFalse(SepulchreChatParser.parseCoffinsOpened(

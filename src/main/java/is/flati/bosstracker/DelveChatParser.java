@@ -11,14 +11,17 @@ final class DelveChatParser
 	static final String DEEP_DELVES = "Deep delves";
 	static final String TOTAL_DELVES = "Total delves";
 
-	private static final String COLORED_NUMBER = "(?:<col=[0-9a-f]{6}>)?(?<value>\\d+)(?:</col>)?";
-
+	// Levels past 8 are "8+ (9)". colouredDigits already wraps each number (open + digits + close).
+	// The extra COLOR_CLOSE after ")" consumes a tag that wrapped the whole "8+ (9)", whose
+	// COLOR_OPEN was taken by the floor group: <col=ff0000>8+ (9)</col>
 	static final Pattern FLOOR_PATTERN = Pattern.compile(
-		"Delve level: " + COLORED_NUMBER.replace("value", "floor") + " duration: "
-			+ "(?:<col=[0-9a-f]{6}>)?(?<duration>\\d+:\\d{2})(?:</col>)?");
+		"Delve level: " + ChatMarkup.coloredDigits("floor")
+			+ "(?:" + ChatMarkup.COLOR_OPEN + "\\+ \\(" + ChatMarkup.coloredDigits("deepFloor") + "\\)"
+			+ ChatMarkup.COLOR_CLOSE + ")?"
+			+ " duration: " + ChatMarkup.COLOR_OPEN + "(?<duration>\\d+:\\d{2})" + ChatMarkup.COLOR_CLOSE);
 
 	static final Pattern DEEP_DELVES_PATTERN = Pattern.compile(
-		"Deep delves completed: " + COLORED_NUMBER.replace("value", "kc"));
+		"Deep delves completed: " + ChatMarkup.coloredDigits("kc"));
 
 	private DelveChatParser()
 	{
@@ -37,7 +40,8 @@ final class DelveChatParser
 			return OptionalInt.empty();
 		}
 
-		return OptionalInt.of(Integer.parseInt(matcher.group("floor")));
+		String deepFloor = matcher.group("deepFloor");
+		return OptionalInt.of(Integer.parseInt(deepFloor != null ? deepFloor : matcher.group("floor")));
 	}
 
 	static OptionalInt parseDeepDelvesCompleted(String message)

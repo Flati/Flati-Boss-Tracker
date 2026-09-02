@@ -42,10 +42,8 @@ final class ClueChatParser
 		TIER_TO_BOSS_NAME.put("master", "Master clues completed");
 	}
 
-	private static final String COLORED_NUMBER = "(?:<col=[0-9a-f]{6}>)?(?<count>[0-9,]+)(?:</col>)?";
-
 	static final Pattern COMPLETION_PATTERN = Pattern.compile(
-		"You have completed " + COLORED_NUMBER
+		"You have completed " + ChatMarkup.coloredCount("count")
 			+ " (?<tier>beginner|easy|medium|hard|elite|master) Treasure Trails?\\.",
 		Pattern.CASE_INSENSITIVE);
 

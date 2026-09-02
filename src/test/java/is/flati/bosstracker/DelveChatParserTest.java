@@ -28,6 +28,33 @@ public class DelveChatParserTest
 	}
 
 	@Test
+	public void parseFloor_deepDelveUsesParenthesisedLevel()
+	{
+		OptionalInt floor = DelveChatParser.parseFloor(
+			"Delve level: 8+ (9) duration: 2:26. Personal best: 1:46");
+		assertTrue(floor.isPresent());
+		assertEquals(9, floor.getAsInt());
+	}
+
+	@Test
+	public void parseFloor_deepDelveWithColorTags()
+	{
+		OptionalInt floor = DelveChatParser.parseFloor(
+			"Delve level: <col=ff0000>8+ (24)</col> duration: <col=ff0000>2:26</col>. Personal best: <col=ff0000>1:46</col>");
+		assertTrue(floor.isPresent());
+		assertEquals(24, floor.getAsInt());
+	}
+
+	@Test
+	public void parseFloor_withColorMacro()
+	{
+		OptionalInt floor = DelveChatParser.parseFloor(
+			"Delve level: 7 duration: @mes_hl_red@1:35</col>. Personal best: @mes_hl_red@1:22</col>");
+		assertTrue(floor.isPresent());
+		assertEquals(7, floor.getAsInt());
+	}
+
+	@Test
 	public void parseFloor_doesNotMatchRunSummary()
 	{
 		assertFalse(DelveChatParser.parseFloor(
@@ -58,9 +85,25 @@ public class DelveChatParserTest
 	}
 
 	@Test
+	public void parseDeepDelvesCompleted_withColorMacro()
+	{
+		OptionalInt kc = DelveChatParser.parseDeepDelvesCompleted(
+			"Deep delves completed: @mes_hl_red@43</col>");
+		assertTrue(kc.isPresent());
+		assertEquals(43, kc.getAsInt());
+	}
+
+	@Test
 	public void parseDeepDelvesCompleted_doesNotMatchFloorLine()
 	{
 		assertFalse(DelveChatParser.parseDeepDelvesCompleted(
 			"Delve level: 8 duration: 2:33. Personal best: 1:46").isPresent());
+	}
+
+	@Test
+	public void parseDeepDelvesCompleted_doesNotMatchDeepDelveFloorLine()
+	{
+		assertFalse(DelveChatParser.parseDeepDelvesCompleted(
+			"Delve level: 8+ (9) duration: 2:26. Personal best: 1:46").isPresent());
 	}
 }

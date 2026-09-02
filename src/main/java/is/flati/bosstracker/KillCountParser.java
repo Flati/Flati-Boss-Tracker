@@ -17,10 +17,11 @@ import net.runelite.api.events.ChatMessage;
 @Singleton
 public class KillCountParser
 {
-	private static final Pattern KILLCOUNT_PATTERN = Pattern.compile(
-		"Your (?<pre>completion count for |subdued |completed )?(?:<col=[0-9a-f]{6}>)?(?<boss>.+?)(?:</col>)? "
+	static final Pattern KILLCOUNT_PATTERN = Pattern.compile(
+		"Your (?<pre>completion count for |subdued |completed )?" + ChatMarkup.COLOR_OPEN + "(?<boss>.+?)"
+			+ ChatMarkup.COLOR_CLOSE + " "
 			+ "(?<post>(?:(?:kill|harvest|lap|completion|success|Total Ticket) )?(?:count )?)is: ?"
-			+ "<col=[0-9a-f]{6}>(?<kc>[0-9,]+)</col>");
+			+ ChatMarkup.coloredCount("kc"));
 
 	private final Client client;
 	private final BossTrackerConfig config;
