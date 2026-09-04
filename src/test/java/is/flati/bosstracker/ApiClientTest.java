@@ -37,7 +37,6 @@ public class ApiClientTest
 		apiClient = new ApiClient(
 			new OkHttpClient(),
 			gson,
-			null,
 			new StubConfig("test-key")
 		);
 		apiClient.setQueueDirectoryForTesting(queueDirectory);

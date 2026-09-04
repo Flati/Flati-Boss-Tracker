@@ -3,8 +3,6 @@ package is.flati.bosstracker;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
@@ -26,9 +24,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 )
 public class BossTrackerPlugin extends Plugin
 {
-	@Inject
-	private Client client;
-
 	@Inject
 	private BossTrackerConfig config;
 
@@ -77,13 +72,6 @@ public class BossTrackerPlugin extends Plugin
 			if (config.enableExternalSync())
 			{
 				apiClient.flushRetryQueue();
-			}
-
-			if (config.enableExternalSync() && config.remindOnLogin() && apiClient.isSyncStale())
-			{
-				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "",
-					"Flati Boss Tracker: Open Boss Kill Log, Grace View Laps, or Collection Log to sync KC to flati.is",
-					null);
 			}
 		}
 	}

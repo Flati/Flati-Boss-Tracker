@@ -96,26 +96,6 @@ public interface BossTrackerConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "remindOnLogin",
-		name = "Remind on login",
-		description = "Remind to sync KC when stale or never synced"
-	)
-	default boolean remindOnLogin()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "staleSyncDays",
-		name = "Stale sync days",
-		description = "Days before showing sync reminder again"
-	)
-	default int staleSyncDays()
-	{
-		return 7;
-	}
-
-	@ConfigItem(
 		keyName = "debugLogging",
 		name = "Debug logging",
 		description = "Log debug messages"

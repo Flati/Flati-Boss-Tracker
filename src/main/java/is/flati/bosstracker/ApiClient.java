@@ -16,7 +16,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.RuneLite;
-import net.runelite.client.config.ConfigManager;
 import is.flati.bosstracker.model.KcSyncPayload;
 import is.flati.bosstracker.model.KcUpdatePayload;
 import is.flati.bosstracker.model.KillPayload;
@@ -34,24 +33,20 @@ public class ApiClient
 {
 	private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 	private static final String USER_AGENT = "FlatiBossTracker/1.0";
-	private static final String CONFIG_GROUP = "flatibosstracker";
-	private static final String LAST_BULK_SYNC_KEY = "lastBulkSyncAt";
 	private static final String PLUGIN_DIR = "flati-boss-tracker";
 	private static final String QUEUE_FILE = "queue.jsonl";
 
 	private final OkHttpClient httpClient;
 	private final Gson gson;
-	private final ConfigManager configManager;
 	private final BossTrackerConfig config;
 	private final ExecutorService queueExecutor;
 	private Path queueDirectoryOverride;
 
 	@Inject
-	public ApiClient(OkHttpClient httpClient, Gson gson, ConfigManager configManager, BossTrackerConfig config)
+	public ApiClient(OkHttpClient httpClient, Gson gson, BossTrackerConfig config)
 	{
 		this.httpClient = httpClient;
 		this.gson = gson;
-		this.configManager = configManager;
 		this.config = config;
 		this.queueExecutor = Executors.newSingleThreadExecutor(queueThreadFactory());
 	}
@@ -74,13 +69,7 @@ public class ApiClient
 
 	public void sendKcSync(KcSyncPayload payload, Runnable onSuccess)
 	{
-		enqueue(config.kcSyncEndpoint(), payload, () -> {
-			setLastBulkSyncAt(System.currentTimeMillis());
-			if (onSuccess != null)
-			{
-				onSuccess.run();
-			}
-		});
+		enqueue(config.kcSyncEndpoint(), payload, onSuccess);
 	}
 
 	public void flushRetryQueue()
@@ -344,28 +333,6 @@ public class ApiClient
 			? queueDirectoryOverride
 			: RuneLite.RUNELITE_DIR.toPath().resolve(PLUGIN_DIR);
 		return base.resolve(QUEUE_FILE);
-	}
-
-	public long getLastBulkSyncAt()
-	{
-		Long value = configManager.getRSProfileConfiguration(CONFIG_GROUP, LAST_BULK_SYNC_KEY, Long.class);
-		return value == null ? 0L : value;
-	}
-
-	public void setLastBulkSyncAt(long epochMillis)
-	{
-		configManager.setRSProfileConfiguration(CONFIG_GROUP, LAST_BULK_SYNC_KEY, epochMillis);
-	}
-
-	public boolean isSyncStale()
-	{
-		long last = getLastBulkSyncAt();
-		if (last == 0)
-		{
-			return true;
-		}
-		long staleMs = (long) config.staleSyncDays() * 24L * 60L * 60L * 1000L;
-		return System.currentTimeMillis() - last > staleMs;
 	}
 
 	private static ThreadFactory queueThreadFactory()

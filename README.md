@@ -13,7 +13,6 @@ The default backend is [flati.is](https://flati.is/osrs), which provides a share
   - **Collection Log** — incremental sync while browsing boss pages
 - **Agility rooftops** — lap completions from chat are tracked on the group dashboard under **Agility** (not Bosses)
 - **Offline retry** — failed requests are queued locally and retried on next login
-- **Login reminder** — optional nudge when KC has not been synced recently
 
 ## Install (recommended)
 
