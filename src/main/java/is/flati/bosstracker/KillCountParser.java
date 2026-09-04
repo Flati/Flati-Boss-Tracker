@@ -67,6 +67,11 @@ public class KillCountParser
 			return;
 		}
 
+		if (handleHunterRumourMessage(message, killedAt))
+		{
+			return;
+		}
+
 		if (handleClueMessage(message, killedAt))
 		{
 			return;
@@ -161,6 +166,27 @@ public class KillCountParser
 		}
 
 		return false;
+	}
+
+	private boolean handleHunterRumourMessage(String message, String killedAt)
+	{
+		java.util.Optional<HunterRumourChatParser.RumourCompletion> completion =
+			HunterRumourChatParser.parse(message);
+		if (!completion.isPresent())
+		{
+			return false;
+		}
+
+		int count = completion.get().getCount();
+		sendKcUpdate(HunterRumourChatParser.BOSS_NAME, count, killedAt);
+		killEventSender.sendKill(HunterRumourChatParser.BOSS_NAME, count, killedAt);
+
+		if (config.debugLogging())
+		{
+			log.debug("Hunter rumour completed: {} = {}", HunterRumourChatParser.BOSS_NAME, count);
+		}
+
+		return true;
 	}
 
 	private boolean handleClueMessage(String message, String killedAt)
